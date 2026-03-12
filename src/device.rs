@@ -7,10 +7,7 @@ use tokio_util::sync::CancellationToken;
 use crate::{
     DEVICES, TOKENS,
     inputs::opendeck_to_device,
-    mappings::{
-        COL_COUNT, CandidateDevice, ENCODER_COUNT, KEY_COUNT, Kind, ROW_COUNT,
-        get_image_format_for_key,
-    },
+    mappings::{CandidateDevice, ENCODER_COUNT, Kind, get_image_format_for_key},
 };
 
 /// Initializes a device and listens for events
@@ -49,10 +46,10 @@ pub async fn device_task(candidate: CandidateDevice, token: CancellationToken) {
             .register_device(
                 candidate.id.clone(),
                 candidate.kind.human_name(),
-                ROW_COUNT as u8,
-                COL_COUNT as u8,
+                candidate.kind.row_count() as u8,
+                candidate.kind.col_count() as u8,
                 ENCODER_COUNT as u8,
-                0,
+                2, // Type 2 is for OpenDeck screen-based devices like Mirabox/AKP
             )
             .await
             .unwrap();
@@ -105,7 +102,7 @@ pub async fn connect(candidate: &CandidateDevice) -> Result<Device, MirajazzErro
     let result = Device::connect(
         &candidate.dev,
         candidate.kind.protocol_version(),
-        KEY_COUNT,
+        candidate.kind.key_count(),
         ENCODER_COUNT,
     )
     .await;
@@ -153,11 +150,22 @@ async fn device_events_task(candidate: &CandidateDevice) -> Result<(), MirajazzE
             log::info!("New update: {:#?}", update);
 
             let id = candidate.id.clone();
+            let kind = &candidate.kind;
 
             if let Some(outbound) = OUTBOUND_EVENT_MANAGER.lock().await.as_mut() {
                 match update {
-                    DeviceStateUpdate::ButtonDown(key) => outbound.key_down(id, key).await.unwrap(),
-                    DeviceStateUpdate::ButtonUp(key) => outbound.key_up(id, key).await.unwrap(),
+                    DeviceStateUpdate::ButtonDown(key) => {
+                        outbound
+                            .key_down(id, crate::inputs::device_to_opendeck(kind, key as usize) as u8)
+                            .await
+                            .unwrap();
+                    }
+                    DeviceStateUpdate::ButtonUp(key) => {
+                        outbound
+                            .key_up(id, crate::inputs::device_to_opendeck(kind, key as usize) as u8)
+                            .await
+                            .unwrap();
+                    }
                     DeviceStateUpdate::EncoderDown(encoder) => {
                         outbound.encoder_down(id, encoder).await.unwrap();
                     }
@@ -201,7 +209,7 @@ pub async fn handle_set_image(device: &Device, evt: SetImageEvent) -> Result<(),
 
             device
                 .set_button_image(
-                    opendeck_to_device(position),
+                    opendeck_to_device(&kind, position),
                     get_image_format_for_key(&kind, position),
                     image,
                 )
@@ -209,8 +217,9 @@ pub async fn handle_set_image(device: &Device, evt: SetImageEvent) -> Result<(),
             device.flush().await?;
         }
         (Some(position), None) => {
+            let kind = Kind::from_vid_pid(device.vid, device.pid).unwrap();
             device
-                .clear_button_image(opendeck_to_device(position))
+                .clear_button_image(opendeck_to_device(&kind, position))
                 .await?;
             device.flush().await?;
         }
