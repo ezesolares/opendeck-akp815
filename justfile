@@ -1,4 +1,4 @@
-id := "st.lynx.plugins.opendeck-akp153.sdPlugin"
+id := "st.lynx.plugins.opendeck-akp815.sdPlugin"
 
 release: bump package tag
 
@@ -41,10 +41,10 @@ collect:
     mkdir -p build/{{id}}
     cp -r assets build/{{id}}
     cp manifest.json build/{{id}}
-    cp target/plugin-linux/x86_64-unknown-linux-gnu/release/opendeck-akp153 build/{{id}}/opendeck-akp153-linux
-    cp target/plugin-mac/universal2-apple-darwin/release/opendeck-akp153 build/{{id}}/opendeck-akp153-mac || true
-    cp target/plugin-win/x86_64-pc-windows-gnu/release/opendeck-akp153.exe build/{{id}}/opendeck-akp153-win.exe || true
+    cp target/plugin-linux/x86_64-unknown-linux-gnu/release/opendeck-akp815 build/{{id}}/opendeck-akp815-linux
+    cp target/plugin-mac/universal2-apple-darwin/release/opendeck-akp815 build/{{id}}/opendeck-akp815-mac || true
+    cp target/plugin-win/x86_64-pc-windows-gnu/release/opendeck-akp815.exe build/{{id}}/opendeck-akp815-win.exe || true
 
 [working-directory: "build"]
 zip:
-    zip -r opendeck-akp153.plugin.zip {{id}}/
+    zip -r opendeck-akp815.plugin.zip {{id}}/
