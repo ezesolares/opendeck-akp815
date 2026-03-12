@@ -1,6 +1,8 @@
 ![Plugin Icon](assets/icon.png)
 
 # OpenDeck Ajazz AKP153 / Mirabox HSV293S Plugin
+# OpenDeck Ajazz AKP815
+
 
 An unofficial plugin for Mirabox HSV293S-family devices
 
@@ -25,6 +27,9 @@ Requires OpenDeck 2.5.0 or newer
 - Soomfon Studio Control Deck (5548:6670) (would be displayed as Mirabox HSV293S)
 - Womier D15 (0600:1000)
 
+Added
+- OpenDeck Ajazz AKP815
+
 ## Platform support
 
 - Linux: Guaranteed, if stuff breaks - I'll probably catch it before public release
@@ -41,6 +46,49 @@ Requires OpenDeck 2.5.0 or newer
 ## Known issues
 
 - All the "old" devices come with the same serial number. You cannot use two of the same devices at the same time (for example a pair of 153R-s), but you can use two different devices at the same time (for example a 153R and a 153E)
+
+## AKP815 Turn off / On (on Linux on sleep / restart)
+
+- Tested on Fedora 43
+
+File to create in
+
+```sh
+sudo nano /usr/lib/systemd/system-sleep/opendeck.sh
+```
+
+```sh
+#!/bin/bash
+
+USERNAME="your-username"
+USER_ID=$(id -u "$USERNAME")
+GROUP_ID=$(id -g "$USERNAME")
+
+case "$1" in
+  pre)
+
+    pkill -f "opendeck"
+    ;;
+  post)
+    sleep 2
+    systemd-run --uid=$USER_ID --gid=$GROUP_ID \
+      --setenv=DISPLAY=:0 \
+      --setenv=DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/${USER_ID}/bus \
+      --setenv=XDG_RUNTIME_DIR=/run/user/${USER_ID} \
+      opendeck
+    ;;
+esac
+
+```
+
+Test
+```sh
+# Simulate pre-sleep
+sudo /usr/lib/systemd/system-sleep/opendeck.sh pre suspend
+
+# Simulate post-resume
+sudo /usr/lib/systemd/system-sleep/opendeck.sh post suspend
+```
 
 ## Building
 
