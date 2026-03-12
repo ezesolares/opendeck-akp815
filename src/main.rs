@@ -100,6 +100,12 @@ async fn shutdown() {
     for (_, token) in tokens.iter() {
         token.cancel();
     }
+
+    let devices = DEVICES.read().await;
+    for (id, device) in devices.iter() {
+        log::info!("Shutting down device {} before exit", id);
+        device.shutdown().await.ok();
+    }
 }
 
 async fn connect() {
