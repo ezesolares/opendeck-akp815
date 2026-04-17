@@ -2,3 +2,6 @@
 /build
 /TODO.md
 /.intentionally-empty-file.o
+rpmbuild/SOURCES/opendeck-akp815-0.9.5.tar.gz
+rpmbuild/SPECS/opendeck-akp815.spec
+opendeck-akp815.spec

@@ -48,3 +48,10 @@ collect:
 [working-directory: "build"]
 zip:
     zip -r opendeck-akp815.plugin.zip {{id}}/
+
+rpm: build-linux
+    rm -rf rpmbuild
+    mkdir -p rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+    tar --exclude=target --exclude=rpmbuild --exclude=.git -czf rpmbuild/SOURCES/opendeck-akp815-0.9.5.tar.gz .
+    cp opendeck-akp815.spec rpmbuild/SPECS/
+    rpmbuild --define "_topdir $(pwd)/rpmbuild" -ba rpmbuild/SPECS/opendeck-akp815.spec
